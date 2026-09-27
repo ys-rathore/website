@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Index Page Generator</title>
+
+    <link rel="icon" type="image/png" href="./logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@latest/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --input-bg: #ffffff;
+            --input-border: #e2e8f0;
+            --accent-blue: #2563eb;
+            --accent-pink: #e11d48;
+            --brand-gradient: linear-gradient(90deg, #f43f5e 0%, #3b82f6 50%, #8b5cf6 100%);
+
+            /* *************************************************************** */
+            /* COLUMN WIDTHS HANDLER DIRECTIVES                  */
+            /* (Ensure the columns in each block sum up to exactly 100%)     */
+            /* *************************************************************** */
+
+            /* --- 4-COLUMN LAYOUT (WITHOUT DATE OF SUB) --- */
+            --col4-sno: 8%;
+            --col4-title: 60%;
+            --col4-date-exp: 17%;
+            --col4-sign: 15%;
+
+            /* --- 5-COLUMN LAYOUT (WITH DATE OF SUB COLS) --- */
+            --col5-sno: 8%;
+            --col5-title: 55%;        /* Increase this if you want a wider title column */
+            --col5-date-exp: 16%;     /* Decrease these if date columns are too wide */
+            --col5-date-sub: 16%;     /* Decrease these if date columns are too wide */
+            --col5-sign: 15%;
+
+            /* *************************************************************** */
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .reveal-up { animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .preview-container.reveal-up { animation-delay: 0.2s; opacity: 0; }
+
+        @media screen and (max-width: 991px) {
+            .navbar-toggler { margin-left: auto; }
+            .navbar-collapse { flex-basis: 100%; margin-top: 10px; text-align: center; }
+        }
+
+        body {
+            margin: 0; padding: 0; font-family: 'Outfit', sans-serif;
+            color: var(--text-dark);
+            background: 
+                linear-gradient(to bottom, rgba(248, 250, 252, 0.4) 0%, rgba(241, 245, 249, 0) 15%),
+                linear-gradient(to top, rgba(3, 5, 9, 0.85) 0%, rgba(3, 5, 9, 0) 30%),
+                url('bgdesign.png'); 
+            background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed;
+            display: flex; flex-direction: column; min-height: 100vh;
+        }
+
+        @media screen and (min-width: 992px) {
+            body { overflow: hidden; height: 100vh; }
+            .controls-card { position: relative; left: 150px; z-index: 20; }
+            .preview-scale-active { transform: scale(0.60); transform-origin: center center; margin: -200px -150px; }
+        }
+
+        .footer-rays {
+            position: fixed; bottom: 0; left: 0; width: 100vw; height: 18vh;
+            background-image: url('footer-rays.png'); 
+            background-size: cover; background-position: center bottom; background-repeat: no-repeat; z-index: 5; pointer-events: none;
+        }
+        .footer-rays::before {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
+            background: linear-gradient(90deg, transparent 0%, #a855f7 40%, #ffffff 50%, #a855f7 60%, transparent 100%);
+            box-shadow: 0 -5px 20px #c084fc, 0 -15px 40px rgba(236, 72, 153, 0.9); z-index: 6;
+        }
+
+        .navbar-container { position: fixed; top: 15px; left: 0; width: 100%; z-index: 100; display: flex; justify-content: center; padding: 0 20px; }
+        .nav-glow-wrapper { position: relative; width: 100%; max-width: 1000px; border-radius: 50px; padding: 2px; background: rgba(255,255,255,0.2); overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+        .nav-glow-wrapper::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(from 0deg, transparent 70%, var(--accent-blue) 85%, var(--accent-pink) 100%); animation: spinGlow 4s linear infinite; z-index: -1; }
+        @keyframes spinGlow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .nt-navbar { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 48px; padding: 8px 30px; width: 100%; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+        .brand-logo { display: flex; align-items: center; text-decoration: none; font-size: 20px; letter-spacing: 1px; color: var(--text-dark); }
+        .brand-logo i { font-size: 24px; margin-right: 8px; background: var(--brand-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .brand-logo .bold-part { font-weight: 900; }
+        .brand-logo .light-part { font-weight: 500; color: var(--text-muted); }
+        .nt-nav-link { color: var(--text-muted) !important; font-weight: 700; text-transform: uppercase; font-size: 13px; margin: 0 12px; transition: 0.3s; letter-spacing: 1px; }
+        .nt-nav-link:hover, .nt-nav-link.active { color: var(--accent-blue) !important; }
+
+        .main-workspace { padding: 90px 20px 20px 20px; display: flex; justify-content: center; align-items: center; gap: 50px; flex: 1; height: 100%; position: relative; z-index: 10; }
+        .controls-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 1); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15); border-radius: 20px; padding: 25px; width: 360px; flex-shrink: 0; max-height: 85vh; overflow-y: auto; scrollbar-width: none; }
+        .controls-card::-webkit-scrollbar { display: none; }
+        .controls-card h3 { font-size: 20px; font-weight: 900; color: var(--text-dark); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .controls-card h3 i { color: var(--accent-blue); font-size: 22px; }
+        
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-weight: 800; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .form-control-nt { width: 100%; padding: 10px 14px; border: 1.5px solid var(--input-border); border-radius: 10px; background: var(--input-bg); color: var(--text-dark); font-size: 13px; font-weight: 600; }
+        .custom-field { display: none; margin-top: 8px; border-left: 3px solid var(--accent-blue); }
+
+        .row-controls { display: flex; gap: 10px; margin-top: 5px; margin-bottom: 15px; }
+        .action-btn { flex: 1; padding: 8px; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 11px; }
+        .add-btn { background: rgba(37, 99, 235, 0.1); color: var(--accent-blue); border: 1px solid var(--accent-blue); } 
+        .add-btn:hover { background: var(--accent-blue); color: white; }
+        .rem-btn { background: rgba(225, 29, 72, 0.1); color: var(--accent-pink); border: 1px solid var(--accent-pink); } 
+        .rem-btn:hover { background: var(--accent-pink); color: white; }
+
+        .button-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-clear { flex: 1; padding: 12px; border: 1.5px solid rgba(225, 29, 72, 0.2); border-radius: 10px; color: var(--accent-pink); font-weight: 800; text-transform: uppercase; font-size: 12px; cursor: pointer; }
+        .btn-download { flex: 2; padding: 12px; border: none; border-radius: 10px; background: var(--brand-gradient); color: #fff; font-weight: 900; text-transform: uppercase; font-size: 13px; cursor: pointer; transition: 0.3s; }
+
+        .preview-container { display: flex; justify-content: center; align-items: center; overflow: visible; width: 100%; }
+        .a4-wrapper { box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2); border-radius: 4px; background: white; transition: 0.2s; }
+
+        @media screen and (max-width: 991px) {
+            body { overflow-y: auto; height: auto; }
+            .main-workspace { flex-direction: column; align-items: center; padding: 100px 10px 40px 10px; }
+            .preview-scale-active { transform: scale(0.40); transform-origin: top center; }
+            .preview-container { height: 450px; align-items: flex-start; }
+        }
+
+        /* A4 INDEX PAGE STRICT SETUP */
+        .a4-page { background: white; width: 210mm; height: 297mm; padding: 12mm 15mm; box-sizing: border-box; position: relative; color: black; font-family: "Times New Roman", Times, serif; }
+        .watermark { position: absolute; top: 51%; left: 50%; transform: translate(-50%, -50%); width: 70%; opacity: 0.18; pointer-events: none; z-index: 0; }
+        
+        .header-info { border: 2px solid #000; padding: 12px 15px; margin-bottom: 10px; position: relative; z-index: 1; font-size: 12pt; line-height: 1.5; display: flex; justify-content: space-between; }
+        .header-col { width: 49%; display: flex; flex-direction: column; gap: 10px; } 
+        .info-row { display: flex; align-items: baseline; width: 100%; }
+        .info-label { font-weight: bold; margin-right: 5px; white-space: nowrap; }
+        .info-value { font-weight: bold; padding-left: 5px; white-space: nowrap; border-bottom: none; }
+
+        h1.index-title { text-align: center; font-size: 16pt; font-weight: bold; text-decoration: underline; margin: 10px 0 15px 0; z-index: 1; position: relative; font-family: "Times New Roman", Times, serif; }
+
+        #assignment-index { width: 100%; border-collapse: collapse; table-layout: fixed; position: relative; z-index: 1; }
+        #assignment-index th, #assignment-index td { border: 2px solid #000; font-size: 11pt; text-align: center; padding: 2px 4px; }
+        
+        #assignment-index th { font-weight: bold; text-transform: uppercase; padding: 6px 4px; white-space: nowrap; }
+        #assignment-index td:nth-child(2) { text-align: left; padding-left: 8px; }
+
+        /* DEFAULT: 4 COLUMNS FLUID WIDTHS MAPPED TO VARIABLE DEFINITIONS */
+        #assignment-index th:nth-child(1) { width: var(--col4-sno) !important; }   
+        #assignment-index th:nth-child(2) { width: var(--col4-title) !important; }  
+        #assignment-index th:nth-child(3) { width: var(--col4-date-exp) !important; }  
+        #assignment-index th:nth-child(4) { width: var(--col4-sign) !important; }  
+
+        /* ADJUSTED 5 COLUMNS DYNAMIC WIDTHS MAPPED TO VARIABLE DEFINITIONS */
+        #assignment-index.with-exp th:nth-child(1) { width: var(--col5-sno) !important; }   
+        #assignment-index.with-exp th:nth-child(2) { width: var(--col5-title) !important; }  
+        #assignment-index.with-exp th:nth-child(3) { width: var(--col5-date-exp) !important; font-size: 9.5pt; }  
+        #assignment-index.with-exp th:nth-child(4) { width: var(--col5-date-sub) !important; font-size: 9.5pt; }  
+        #assignment-index.with-exp th:nth-child(5) { width: var(--col5-sign) !important; }  
+
+        /* PRINT CONFIGURATION */
+        @media print {
+            @page { size: A4; margin: 0 !important; padding: 0 !important; }
+            html, body { width: 210mm !important; height: 295mm !important; background: white !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; box-sizing: border-box !important; }
+            .no-print, .footer-rays, .navbar-container { display: none !important; } 
+            .main-workspace { padding: 0 !important; margin: 0 !important; display: block !important; }
+            .preview-container { padding: 0 !important; margin: 0 !important; display: block !important; width: 210mm !important; height: 295mm !important; }
+            .a4-wrapper { transform: none !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; width: 210mm !important; height: 295mm !important; overflow: hidden !important; }
+            .a4-page { width: 210mm !important; height: 295mm !important; max-height: 295mm !important; margin: 0 !important; overflow: hidden !important; page-break-after: avoid !important; page-break-inside: avoid !important; page-break-before: avoid !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="footer-rays no-print"></div>
+
+    <div class="navbar-container no-print">
+        <div class="nav-glow-wrapper">
+            <nav class="navbar navbar-expand-lg nt-navbar">
+                <a class="brand-logo" href="index.html">
+                    <i class="ri-space-ship-fill"></i>
+                    <span class="bold-part">ROCKET</span><span class="light-part">SOLUTIONS</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <i class="ri-menu-4-line"></i>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item"><a class="nav-link nt-nav-link" href="index.html">Home</a></li>
+                        <li class="nav-item"><a class="nav-link nt-nav-link" href="cover-page.html">Custom Outer Page</a></li>
+                        <li class="nav-item"><a class="nav-link nt-nav-link active" href="index-page.html">Custom Index</a></li>
+                        <li class="nav-item"><a class="nav-link nt-nav-link" href="resources.html">Assignment Notes</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <div class="main-workspace">
+        <div class="controls-card no-print reveal-up">
+            <h3><i class="ri-list-check-2"></i> Index Setup</h3>
+            
+            <div class="form-group">
+                <label>Student Name</label>
+                <input type="text" id="name-input" class="form-control-nt" value="Rohit Singh" placeholder="Enter Full Name" oninput="updatePage()">
+            </div>
+
+            <div class="form-group">
+                <label>Class / Semester</label>
+                <select id="class-input" class="form-control-nt" oninput="updatePage()">
+                    <option value="" disabled>-- Select --</option>
+                    <option value="BCA 1st SEM">BCA 1st SEM</option>
+                    <option value="BCA 2nd SEM">BCA 2nd SEM</option>
+                    <option value="BCA 3rd SEM">BCA 3rd SEM</option>
+                    <option value="BCA 4th SEM" selected>BCA 4th SEM</option>
+                    <option value="BCA 5th SEM">BCA 5th SEM</option>
+                    <option value="BCA 6th SEM">BCA 6th SEM</option>
+                    <option value="custom">Custom Entry...</option>
+                </select>
+                <input type="text" id="class-custom" class="form-control-nt custom-field" placeholder="e.g. MCA 1st SEM" oninput="updatePage()">
+            </div>
+
+            <div class="form-group">
+                <label>Session</label>
+                <select id="session-input" class="form-control-nt" oninput="updatePage()">
+                    <option value="" disabled>-- Select --</option>
+                    <option value="2024-25">2024-25</option>
+                    <option value="2025-26" selected>2025-26</option>
+                    <option value="custom">Custom Entry...</option>
+                </select>
+                <input type="text" id="session-custom" class="form-control-nt custom-field" placeholder="e.g. 2027-28" oninput="updatePage()">
+            </div>
+
+            <div class="form-group">
+                <label>Subject</label>
+                <select id="subject-input" class="form-control-nt" oninput="updatePage()">
+                    <option value="" disabled>-- Select --</option>
+                    <option value="C Programming Lab">C Programming Lab</option>
+                    <option value="Office Tools Lab">Office Tools Lab</option>
+                    <option value="OOP with C++ Lab">OOP with C++ Lab</option>
+                    <option value="Data Structure Lab">Data Structure Lab</option>
+                    <option value="DBMS Lab">DBMS Lab</option>
+                    <option value="Java Lab">Java Lab</option>
+                    <option value="Python Programming Lab">Python Programming Lab</option>
+                    <option value="Internet Technology Lab" selected>Internet Technology Lab</option>
+                    <option value="Mobile App Development Lab">Mobile App Development Lab</option>
+                    <option value="R Programming Lab">R Programming Lab</option>
+                    <option value="Seminar">Seminar</option>
+                    <option value="Web Programming Using C# Lab">Web Programming Using C# Lab</option>
+                    <option value="VB.NET Lab">VB.NET Lab</option>
+                    <option value="Minor Project">Minor Project</option>
+                    <option value="custom">Custom Entry...</option>
+                </select>
+                <input type="text" id="subject-custom" class="form-control-nt custom-field" placeholder="Type custom subject" oninput="updatePage()">
+            </div>
+
+            <div class="form-group">
+                <label>Faculty</label>
+                <select id="teacher-select" class="form-control-nt" oninput="updatePage()">
+                    <option value="" disabled>-- Select --</option>
+                    <option value="Mrs. Laxyata Bhati" selected>Mrs. Laxyata Bhati</option>
+                    <option value="Mr. Dinesh Prajapat">Mr. Dinesh Prajapat</option>
+                    <option value="Mr. Deepankar Pal">Mr. Deepankar Pal</option>
+                    <option value="Mr. Hem Singh">Mr. Hem Singh</option>
+                    <option value="Ms. Meenakshi Chouhan">Ms. Meenakshi Chouhan</option>
+                    <option value="Ms. Pooja Verma">Ms. Pooja Verma</option>
+                    <option value="custom">Custom Entry...</option>
+                </select>
+                <input type="text" id="teacher-custom" class="form-control-nt custom-field" placeholder="Type Teacher Name" oninput="updatePage()">
+            </div>
+
+            <div class="form-group">
+                <label style="margin-top:10px;">Columns Setup:</label>
+                <button id="toggle-col-btn" class="action-btn add-btn" style="width: 100%; margin-top: 5px; padding: 10px;" onclick="toggleExpColumn()">+ Add "DATE OF SUB" Column</button>
+            </div>
+
+            <div class="form-group" style="background: rgba(0,0,0,0.03); padding: 10px; border-radius: 10px; border: 1px solid var(--input-border);">
+                <label style="color: var(--accent-blue);">Edit Column Names:</label>
+                <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                    <input type="text" id="col-exp-input" class="form-control-nt" value="DATE OF EXP" placeholder="Col 3 Text" oninput="updateHeaders()" style="font-size: 11px; padding: 6px;">
+                    <input type="text" id="col-sub-input" class="form-control-nt" value="DATE OF SUB" placeholder="Col 4 Text" oninput="updateHeaders()" style="font-size: 11px; padding: 6px; display: none;">
+                </div>
+                <small style="font-size: 10px; color: var(--text-muted);">Change text to e.g. "DATE" or "SUBMISSION"</small>
+            </div>
+
+            <div class="form-group">
+                <label style="margin-top:10px;">Total Table Rows: <span id="row-display" style="color: var(--accent-blue); font-size:14px; font-weight: 900;">24</span></label>
+                <div class="row-controls">
+                    <button class="action-btn rem-btn" onclick="adjustRows(-1)">- Remove</button>
+                    <button class="action-btn add-btn" onclick="adjustRows(1)">+ Add</button>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-clear" onclick="clearForm()">Clear</button>
+                <button class="btn-download" onclick="triggerPerfectPrint()">Download PDF <i class="ri-download-2-line"></i></button>
+            </div>
+        </div>
+
+      <div class="preview-container reveal-up">
+        <div id="document-wrapper" class="a4-wrapper preview-scale-active">
+                <div class="a4-page">
+                    <img src="./logo.png" alt="Watermark" class="watermark">
+                    
+                    <div class="header-info">
+                        <div class="header-col">
+                            <div class="info-row">
+                                <span class="info-label">NAME :</span>
+                                <span class="info-value" id="display-name">VISHNU JI.....</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">CLASS :</span>
+                                <span class="info-value" id="display-class">BCA 4th SEM</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">YEAR  :&nbsp;</span>
+                                <span class="info-value" id="display-session">2025-26</span>
+                            </div>
+                        </div>
+                        <div class="header-col">
+                            <div class="info-row">
+                                <span class="info-label">SUBJECT :</span>
+                                <span class="info-value" id="display-subject">Internet Technology Lab</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">FACULTY :</span>
+                                <span class="info-value" id="display-teacher">Mrs. Laxyata Bhati</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h1 class="index-title">INDEX</h1>
+                    
+                    <table id="assignment-index">
+                        <thead>
+                            <tr id="header-row">
+                                <th>S NO</th>
+                                <th>TITLE</th>
+                                <th id="th-exp">DATE OF EXP</th>
+                                <th>SIGN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let rowCount = 24;
+        let hasExpCol = false; 
+
+        function updatePage() {
+            const studentName = document.getElementById('name-input').value;
+            document.getElementById('display-name').innerText = studentName || "\u00A0";
+            
+            const classSelect = document.getElementById('class-input').value;
+            const classCustom = document.getElementById('class-custom');
+            let finalClass = classSelect === 'custom' ? (classCustom.style.display='block', classCustom.value) : (classCustom.style.display='none', classSelect);
+            document.getElementById('display-class').innerText = finalClass || "\u00A0";
+
+            const sessionSel = document.getElementById('session-input');
+            const sessionCus = document.getElementById('session-custom');
+            let finalSession = sessionSel.value === 'custom' ? (sessionCus.style.display='block', sessionCus.value) : (sessionCus.style.display='none', sessionSel.value);
+            document.getElementById('display-session').innerText = finalSession || "\u00A0";
+
+            const subSel = document.getElementById('subject-input');
+            const subCus = document.getElementById('subject-custom');
+            let finalSubject;
+            
+            if(subSel.value === 'custom') {
+                subCus.style.display = 'block';
+                finalSubject = subCus.value;
+            } else if (subSel.value) {
+                subCus.style.display = 'none';
+                finalSubject = subSel.value; 
+            } else {
+                subCus.style.display = 'none';
+                finalSubject = "";
+            }
+            document.getElementById('display-subject').innerText = finalSubject || "\u00A0";
+
+            const teaSel = document.getElementById('teacher-select');
+            const teaCus = document.getElementById('teacher-custom');
+            let finalTeacher = teaSel.value === 'custom' ? (teaCus.style.display='block', teaCus.value) : (teaCus.style.display='none', teaSel.value);
+            document.getElementById('display-teacher').innerText = finalTeacher || "\u00A0";
+        }
+
+        function toggleExpColumn() {
+            hasExpCol = !hasExpCol;
+            const btn = document.getElementById('toggle-col-btn');
+            const tr = document.getElementById('header-row');
+            const table = document.getElementById('assignment-index');
+            const subInput = document.getElementById('col-sub-input');
+
+            if (hasExpCol) {
+                btn.innerText = '- Remove "DATE OF SUB" Column';
+                btn.classList.remove('add-btn');
+                btn.classList.add('rem-btn');
+                
+                tr.innerHTML = `<th>S NO</th><th>TITLE</th><th id="th-exp">DATE OF EXP</th><th id="th-sub">DATE OF SUB</th><th>SIGN</th>`;
+                table.classList.add('with-exp');
+                subInput.style.display = 'block';
+            } else {
+                btn.innerText = '+ Add "DATE OF SUB" Column';
+                btn.classList.remove('rem-btn');
+                btn.classList.add('add-btn');
+                
+                tr.innerHTML = `<th>S NO</th><th>TITLE</th><th id="th-exp">DATE OF EXP</th><th>SIGN</th>`;
+                table.classList.remove('with-exp');
+                subInput.style.display = 'none';
+            }
+            updateHeaders();
+            renderTable();
+        }
+
+        function updateHeaders() {
+            const expText = document.getElementById('col-exp-input').value || "DATE OF EXP";
+            const subText = document.getElementById('col-sub-input').value || "DATE OF SUB";
+            
+            const thExp = document.getElementById('th-exp');
+            const thSub = document.getElementById('th-sub');
+            
+            if(thExp) thExp.innerText = expText;
+            if(thSub) thSub.innerText = subText;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = ""; 
+            
+            const rowHeight = rowCount <= 20 ? '40px' : (rowCount <= 26 ? '33px' : '25px');
+            const cells = hasExpCol ? `<td></td><td></td><td></td><td></td>` : `<td></td><td></td><td></td>`;
+
+            for(let i = 1; i <= rowCount; i++) {
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="height: ${rowHeight}"></td> 
+                        ${cells}
+                    </tr>
+                `;
+            }
+            document.getElementById('row-display').innerText = rowCount;
+        }
+
+        function adjustRows(change) {
+            if(rowCount + change >= 5 && rowCount + change <= 35) { 
+                rowCount += change;
+                renderTable();
+            }
+        }
+
+        function triggerPerfectPrint() {
+            const wrap = document.getElementById('document-wrapper');
+            const studentName = document.getElementById('name-input').value || "Student";
+            const subSel = document.getElementById('subject-input');
+            const subCus = document.getElementById('subject-custom');
+            
+            let subjectCleanName = "Index";
+            if (subSel.value) {
+                if (subSel.value === 'custom') {
+                    subjectCleanName = subCus.value;
+                } else {
+                    subjectCleanName = subSel.options[subSel.selectedIndex].text;
+                }
+            }
+
+            const originalTitle = document.title;
+            document.title = `${studentName.toUpperCase()} ${subjectCleanName.toUpperCase()} INDEX`;
+
+            wrap.classList.remove('preview-scale-active');
+            
+            setTimeout(() => {
+                window.print();
+                document.title = originalTitle;
+                wrap.classList.add('preview-scale-active');
+            }, 150);
+        }
+
+        function clearForm() {
+            document.getElementById('name-input').value = "";
+            document.getElementById('class-custom').value = "";
+            document.getElementById('teacher-custom').value = "";
+            document.getElementById('subject-custom').value = "";
+            document.getElementById('session-custom').value = "";
+            document.getElementById('col-exp-input').value = "DATE OF EXP";
+            document.getElementById('col-sub-input').value = "DATE OF SUB";
+            
+            const selects = document.querySelectorAll('select');
+            selects.forEach(select => select.selectedIndex = 0);
+            
+            if (hasExpCol) toggleExpColumn();
+            
+            updatePage();
+            updateHeaders();
+        }
+
+        updatePage();
+        renderTable();
+    </script>
+</body>
+</html>
